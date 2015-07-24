@@ -1,0 +1,309 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'bundler/setup'
+require 'pp'
+require 'wmctrl'
+
+class Screen
+	def initialize(w, h)
+		@width = w;
+		@height = h;
+	end
+	
+	def width()
+		return @width;
+	end
+
+	def height()
+		return @height;
+	end
+end
+
+class Monitor
+	def initialize(x, y, w, h)
+		@x = x;
+		@y = y;
+		@width = w;
+		@height = h;
+	end
+
+	def x()
+		return @x;
+	end
+	
+	def y()
+		return @y;
+	end
+
+	def width()
+		return @width;
+	end
+
+	def height()
+		return @height;
+	end
+
+	def top()
+		@y
+	end
+
+	def bottom()
+		@y + @height;
+	end
+
+	def left()
+		@x;
+	end
+
+	def right()
+		@x + @width;
+	end
+
+	# returns true if the line along the given 'x'
+	# intersects the monitor's work area.
+	def contains_x?(x)
+		(self.left..self.right).include?(x);
+	end
+
+	def contains_y?(y)
+		(self.top..self.bottom).include?(y)
+	end
+
+end
+
+class Window
+	def initialize(data)
+		@data = data;
+		@wm = WMCtrl.instance;
+	end
+
+	def pp
+		Kernel::pp @data
+	end
+
+	def title
+		@data[:title]
+	end
+
+	def active?
+		@data[:active]
+	end
+
+	def position
+		@data.position
+	end
+
+	def left
+		@data.position[:x]
+	end
+
+	def right
+		@data.position[:x] + @data.position[:width];
+	end
+
+	def top
+		@data.position[:y]
+	end
+
+	def bottom
+		@data.position[:y] + @data.position[:height]
+	end
+
+	def width
+		@data.position[:width]
+	end
+
+	def height
+		@data.position[:height]
+	end
+
+	def place(opts)
+		new_position = @data.position.merge(opts);
+		# ruby.wmctrl seems to have an issue where it double-accounts for 
+		# misapplies frame_extent when moving/resizing w window.  Work around 
+		# that here.
+		new_position[:x] -= @data[:frame_extents][0]
+		new_position[:y] -= @data[:frame_extents][1]
+		@data.place(new_position)
+	end
+
+	# returns true if this window is to the right 'w'
+	# That is, if this window were moved left solely along the X
+	# axis, would its left edge collide with w's
+	# left edge? 
+	def right_of?(w)
+		(w.left < self.left) &&
+		(w.top <= self.bottom) &&
+		(self.top <= w.bottom)
+	end
+
+	def left_of?(w)
+		(self.left < w.left) &&
+		(w.top <= self.bottom) &&
+		(self.top <= w.bottom)
+	end
+
+	def below?(w)
+		(w.top < self.top) &&
+		(w.left <= self.right) &&
+		(self.left <= w.right)
+	end
+
+	def above?(w)
+		(self.top < w.top) &&
+		(w.left <= self.right) &&
+		(self.left <= w.right)
+	end
+
+	# returns true if 'window' and this one overlap.
+	def overlap?(window)
+		((window.left <= self.right) && (self.left <= window.right)) &&
+		((window.top <= self.bottom) && (self.top <= window.bottom))
+	end
+end
+
+class Desktop
+	def Desktop.build()
+		screen, monitors = get_screen_info();
+		windows = get_visible_windows();
+		return Desktop.new(screen, monitors, windows);
+	end
+
+	def Desktop.get_screen_info()
+		screen = nil;
+		monitors = [];
+
+		xrandrTxt = %x(xrandr -q);
+		xrandrTxt.each_line { |line| 
+			line.match(/^Screen.*current (\d+) x (\d+), maximum/){ |match|
+				screen = Screen.new(match[1].to_i, match[2].to_i)
+			}
+			line.match(/\Wconnected (\d+)x(\d+)\+(\d+)\+(\d+) /) { |match|
+				monitor = Monitor.new(match[3].to_i, match[4].to_i, match[1].to_i, match[2].to_i);
+				monitors.push monitor;
+			}
+		};
+		return screen, monitors;
+	end
+
+	def Desktop.get_active_desktop()
+		return WMCtrl.instance.list_desktops().select { |d|
+			d[:current] == true
+		}[0]
+	end
+
+	# Gets visible windows on current desktop.
+	def Desktop.get_visible_windows()
+		desktop = get_active_desktop();
+		windowData = WMCtrl.instance.windows().select() { |w| 
+			(([-1, desktop[:id]].include?(w[:desktop])) ||
+			 (w[:state].include?("_NET_WM_STATE_STICKY") )
+			) &&
+			(!w[:state].include?("_NET_WM_STATE_HIDDEN") ) &&
+			(!w[:class].match(/^desktop_window/))
+		}
+		windowData.map{ |w| Window.new(w) }
+	end
+
+	def initialize(screen, monitors, visible_windows)
+		@screen = screen;
+		@monitors = monitors;
+		@visible_windows = visible_windows;
+	end
+
+	def active_window
+		@visible_windows.find { |w| w.active? }
+	end
+
+	def pack_right(window)
+		candidate_edges = @visible_windows.select { |w| 
+			w.right_of?(window) && 
+			(!w.overlap?(window))
+	   	}.collect { |w| w.left }
+
+		candidate_edges.concat @monitors.select { |m|
+			m.contains_x?(window.right + 1)
+		}.collect { |m| m.right }
+
+		new_right = candidate_edges.min() || window.right;
+		window.place(:x => new_right - window.width);
+	end
+
+	def pack_left(window)
+		candidates_edges = @visible_windows.select {  |w|
+			w.left_of?(window) &&
+			(!w.overlap?(window))
+		}.collect { |w| w.right}
+
+		candidates_edges.concat @monitors.select { |m|
+			m.contains_x?(window.left - 1)
+		}.collect { |m| m.left }
+
+		new_left = candidates_edges.max || window.left
+		window.place(:x => new_left);
+	end
+
+	def pack_up(window)
+		candidates_edges = @visible_windows.select { |w|
+			w.above?(window) &&
+			(!w.overlap?(window))
+		}.collect { |w| w.bottom }
+
+		candidates_edges.concat @monitors.select { |m|
+			m.contains_y?(window.top - 1)
+		}.collect { |m| m.top }
+
+		new_top = candidates_edges.max || window.top
+		window.place( :y => new_top )
+	end
+
+	def pack_down(window)
+		candidates_edges = @visible_windows.select { |w|
+			w.below?(window) &&
+			(!w.overlap?(window))
+		}.collect { |w| w.top }
+
+		candidates_edges.concat @monitors.select { |m|
+			m.contains_y?(window.bottom + 1)
+		}.collect { |m| m.bottom }
+
+		new_bottom = candidates_edges.min || window.bottom
+		window.place( :y => new_bottom - window.height)
+	end
+
+	private_class_method :get_screen_info, :get_active_desktop, :get_visible_windows
+	attr_reader :screen, :monitors, :visible_windows
+end
+
+class CommandInterpreter
+	def initialize(desktop)
+		@desktop = desktop;
+	end
+
+	def pack_right(args)
+		@desktop.pack_right(@desktop.active_window);
+	end
+
+	def pack_left(args)
+		@desktop.pack_left(@desktop.active_window);
+	end
+
+	def pack_up(args)
+		@desktop.pack_up(@desktop.active_window);
+	end
+
+	def pack_down(args)
+		@desktop.pack_down(@desktop.active_window)
+	end
+
+	def run_command(args)
+		@args = args
+		cmd = args[0]
+		public_send(cmd.to_sym, args);
+	end
+end
+
+desktop = Desktop.build();
+interpreter = CommandInterpreter.new(Desktop.build());
+interpreter.run_command(ARGF.argv);
