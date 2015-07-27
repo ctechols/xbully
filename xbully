@@ -216,7 +216,7 @@ class Desktop
 		@visible_windows.find { |w| w.active? }
 	end
 
-	def pack_right(window)
+	private def next_edge_right(window)
 		candidate_edges = @visible_windows.select { |w| 
 			w.right_of?(window) && 
 			(!w.overlap?(window))
@@ -226,11 +226,15 @@ class Desktop
 			m.contains_x?(window.right + 1)
 		}.collect { |m| m.right }
 
-		new_right = candidate_edges.min() || window.right;
+		candidate_edges.min() || window.right;
+	end
+
+	def pack_right(window)
+		new_right = next_edge_right(window);
 		window.place(:x => new_right - window.width);
 	end
 
-	def pack_left(window)
+	private def next_edge_left(window)
 		candidates_edges = @visible_windows.select {  |w|
 			w.left_of?(window) &&
 			(!w.overlap?(window))
@@ -240,11 +244,15 @@ class Desktop
 			m.contains_x?(window.left - 1)
 		}.collect { |m| m.left }
 
-		new_left = candidates_edges.max || window.left
+		candidates_edges.max || window.left
+	end
+
+	def pack_left(window)
+		new_left = next_edge_left(window);
 		window.place(:x => new_left);
 	end
 
-	def pack_up(window)
+	private def next_edge_up(window)
 		candidates_edges = @visible_windows.select { |w|
 			w.above?(window) &&
 			(!w.overlap?(window))
@@ -254,11 +262,15 @@ class Desktop
 			m.contains_y?(window.top - 1)
 		}.collect { |m| m.top }
 
-		new_top = candidates_edges.max || window.top
+		candidates_edges.max || window.top
+	end
+
+	def pack_up(window)
+		new_top = next_edge_up(window)
 		window.place( :y => new_top )
 	end
 
-	def pack_down(window)
+	private def next_edge_down(window)
 		candidates_edges = @visible_windows.select { |w|
 			w.below?(window) &&
 			(!w.overlap?(window))
@@ -268,7 +280,11 @@ class Desktop
 			m.contains_y?(window.bottom + 1)
 		}.collect { |m| m.bottom }
 
-		new_bottom = candidates_edges.min || window.bottom
+		candidates_edges.min || window.bottom
+	end
+
+	def pack_down(window)
+		new_bottom = next_edge_down(window)
 		window.place( :y => new_bottom - window.height)
 	end
 
