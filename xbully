@@ -234,6 +234,11 @@ class Desktop
 		window.place(:x => new_right - window.width);
 	end
 
+	def grow_right(window)
+		new_right = next_edge_right(window);
+		window.place(:width => new_right - window.left);
+	end
+
 	private def next_edge_left(window)
 		candidates_edges = @visible_windows.select {  |w|
 			w.left_of?(window) &&
@@ -301,6 +306,10 @@ class CommandInterpreter
 		@desktop.pack_right(@desktop.active_window);
 	end
 
+	def grow_right(args)
+		@desktop.grow_right(@desktop.active_window);
+	end
+
 	def pack_left(args)
 		@desktop.pack_left(@desktop.active_window);
 	end
@@ -312,6 +321,7 @@ class CommandInterpreter
 	def pack_down(args)
 		@desktop.pack_down(@desktop.active_window)
 	end
+
 
 	def run_command(args)
 		@args = args
