@@ -22,7 +22,7 @@ xbully has the following list of dependencies on an Ubuntu system:
 * libx11-dev
 * libglib2.0-dev
 * libxmu-dev
-* xrandr (part of x11-xserver-utils)
+* libxrandr-dev
 
 xbully also requires a window manager with good support for the Extended Window 
 Manager Hints (EWMH) specification 

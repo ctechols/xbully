@@ -4,6 +4,7 @@ require 'rubygems'
 require 'bundler/setup'
 require 'pp'
 require 'wmctrl'
+require 'xlib-objects'
 
 class Screen
 	def initialize(w, h)
@@ -165,26 +166,26 @@ end
 
 class Desktop
 	def Desktop.build()
-		screen, monitors = get_screen_info();
+		display = XlibObj::Display.new(ENV['DISPLAY']);
+		screen = get_screen_info(display);
+		monitors = get_monitors(display)
 		windows = get_visible_windows();
-		return Desktop.new(screen, monitors, windows);
+		return Desktop.new(display, screen, monitors, windows);
 	end
 
-	def Desktop.get_screen_info()
-		screen = nil;
-		monitors = [];
+	def Desktop.get_screen_info(display)
+		screen_width = display.screens[0].width
+		screen_height = display.screens[0].height
+		Screen.new(screen_width, screen_height)
+	end
 
-		xrandrTxt = %x(xrandr -q);
-		xrandrTxt.each_line { |line| 
-			line.match(/^Screen.*current (\d+) x (\d+), maximum/){ |match|
-				screen = Screen.new(match[1].to_i, match[2].to_i)
-			}
-			line.match(/\Wconnected (\d+)x(\d+)\+(\d+)\+(\d+) /) { |match|
-				monitor = Monitor.new(match[3].to_i, match[4].to_i, match[1].to_i, match[2].to_i);
-				monitors.push monitor;
-			}
-		};
-		return screen, monitors;
+	def Desktop.get_monitors(display)
+		main_screen = display.screens.first
+		monitors = []
+		main_screen.crtcs.each { |crtc|
+			monitors.push Monitor.new(crtc.x, crtc.y, crtc.width, crtc.height);
+		}
+		monitors
 	end
 
 	def Desktop.get_active_desktop()
@@ -206,7 +207,8 @@ class Desktop
 		windowData.map{ |w| Window.new(w) }
 	end
 
-	def initialize(screen, monitors, visible_windows)
+	def initialize(display, screen, monitors, visible_windows)
+		@display = display
 		@screen = screen;
 		@monitors = monitors;
 		@visible_windows = visible_windows;
