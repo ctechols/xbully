@@ -74,7 +74,8 @@ class Monitor
 end
 
 class Window
-	def initialize(data)
+	def initialize(display, data)
+		@display = display
 		@data = data;
 		@wm = WMCtrl.instance;
 	end
@@ -169,7 +170,7 @@ class Desktop
 		display = XlibObj::Display.new(ENV['DISPLAY']);
 		screen = get_screen_info(display);
 		monitors = get_monitors(display)
-		windows = get_visible_windows();
+		windows = get_visible_windows(display);
 		return Desktop.new(display, screen, monitors, windows);
 	end
 
@@ -195,7 +196,7 @@ class Desktop
 	end
 
 	# Gets visible windows on current desktop.
-	def Desktop.get_visible_windows()
+	def Desktop.get_visible_windows(display)
 		desktop = get_active_desktop();
 		windowData = WMCtrl.instance.windows().select() { |w| 
 			(([-1, desktop[:id]].include?(w[:desktop])) ||
@@ -204,7 +205,7 @@ class Desktop
 			(!w[:state].include?("_NET_WM_STATE_HIDDEN") ) &&
 			(!w[:class].match(/^desktop_window/))
 		}
-		windowData.map{ |w| Window.new(w) }
+		windowData.map{ |w| Window.new(display, w) }
 	end
 
 	def initialize(display, screen, monitors, visible_windows)
