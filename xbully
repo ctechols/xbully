@@ -121,13 +121,39 @@ class Window
 	end
 
 	def place(opts)
+		place_xlib(opts)
+	end
+
+	def place_xlib(opts)
 		new_position = @data.position.merge(opts);
-		# ruby.wmctrl seems to have an issue where it double-accounts for 
-		# misapplies frame_extent when moving/resizing w window.  Work around 
-		# that here.
-		new_position[:x] -= @data[:frame_extents][0]
-		new_position[:y] -= @data[:frame_extents][1]
-		@data.place(new_position)
+		# This is going to need to read the existing size hints, set the size 
+		# hints to my preference, then restore the original size hints.
+		# Use:
+		# XGetWMSizeHints
+		# XAllocSizeHints.
+		# XSetWMSizeHints.
+		# Help here: 
+		# https://tronche.com/gui/x/xlib/ICC/client-to-window-manager/wm-normal-hints.html
+		old_position = @data[:geometry]
+		w = XlibObj::Window.new(@display, @data[:id])
+		new_position[:width] -= (@data[:frame_extents][0] + @data[:frame_extents][1]);
+		new_position[:height] -= (@data[:frame_extents][2] + @data[:frame_extents][3]);
+		w.move_resize(new_position[:x], new_position[:y], new_position[:width], new_position[:height]);
+		@data = WMCtrl.instance.windows(:id => @data[:id])[0]
+		old_position != @data[:geometry]
+	end
+
+	def place_wmctrl(opts)
+		target_position = @data.position.merge(opts);
+		current_position = @data[:geometry]
+		## ruby.wmctrl seems to have an issue where it
+		## misapplies frame_extent when moving/resizing w window.  Work around 
+		## that here.
+		target_position[:x] -= @data[:frame_extents][0]
+		target_position[:y] -= @data[:frame_extents][1]
+		@data.place(target_position)
+		new_position = @data[:geometry]
+		current_position != new_position
 	end
 
 	# returns true if this window is to the right 'w'
