@@ -264,10 +264,9 @@ class Desktop
 		end
 	end
 
-	private def next_edge_right(window)
+	private def next_edge_right(window, include_overlap)
 		candidate_edges = @visible_windows.select { |w| 
-			w.right_of?(window) && 
-			(!w.overlap?(window))
+			w.right_of?(window) && overlap_filter(w, window, include_overlap)
 	   	}.collect { |w| w.left }
 
 		candidate_edges.concat @monitors.select { |m|
@@ -278,19 +277,18 @@ class Desktop
 	end
 
 	def pack_right(window)
-		new_right = next_edge_right(window);
+		new_right = next_edge_right(window, :no);
 		window.place(:x => new_right - window.width);
 	end
 
 	def grow_right(window)
-		new_right = next_edge_right(window);
-		window.place(:width => new_right - window.left);
+		new_right = next_edge_right(window, :no)
+		window.place( :width => new_right - window.left )
 	end
 
-	private def next_edge_left(window)
+	private def next_edge_left(window, include_overlap)
 		candidates_edges = @visible_windows.select {  |w|
-			w.left_of?(window) &&
-			(!w.overlap?(window))
+			w.left_of?(window) && overlap_filter(w, window, include_overlap)
 		}.collect { |w| w.right}
 
 		candidates_edges.concat @monitors.select { |m|
@@ -301,14 +299,13 @@ class Desktop
 	end
 
 	def pack_left(window)
-		new_left = next_edge_left(window);
+		new_left = next_edge_left(window, :no);
 		window.place(:x => new_left);
 	end
 
-	private def next_edge_up(window)
+	private def next_edge_up(window, include_overlap)
 		candidates_edges = @visible_windows.select { |w|
-			w.above?(window) &&
-			(!w.overlap?(window))
+			w.above?(window) && overlap_filter(w, window, include_overlap)
 		}.collect { |w| w.bottom }
 
 		candidates_edges.concat @monitors.select { |m|
@@ -319,14 +316,13 @@ class Desktop
 	end
 
 	def pack_up(window)
-		new_top = next_edge_up(window)
+		new_top = next_edge_up(window, :no)
 		window.place( :y => new_top )
 	end
 
-	private def next_edge_down(window)
+	private def next_edge_down(window, include_overlap)
 		candidates_edges = @visible_windows.select { |w|
-			w.below?(window) &&
-			(!w.overlap?(window))
+			w.below?(window) && overlap_filter(w, window, include_overlap)
 		}.collect { |w| w.top }
 
 		candidates_edges.concat @monitors.select { |m|
@@ -337,7 +333,7 @@ class Desktop
 	end
 
 	def pack_down(window)
-		new_bottom = next_edge_down(window)
+		new_bottom = next_edge_down(window, :no)
 		window.place( :y => new_bottom - window.height)
 	end
 
