@@ -245,6 +245,25 @@ class Desktop
 		@visible_windows.find { |w| w.active? }
 	end
 
+	# Test windows based on desired overlapping status.
+	#
+	# If match_overlaps == :no then return true iff window1 and window2 do 
+	# not overlap.
+	# If match_overlaps == :only then return true iff window1 and window2 
+	# overlap.
+	# If match_overlaps == :yes then whether window1 and window2 overlap is 
+	# irrelevant, so return true;
+	private def overlap_filter(window1, window2, match_overlaps)
+		case match_overlaps
+			when :yes
+				true
+			when :no
+				(!window1.overlap?(window2))
+			when :only
+				(window1.overlap?(window2))
+		end
+	end
+
 	private def next_edge_right(window)
 		candidate_edges = @visible_windows.select { |w| 
 			w.right_of?(window) && 
