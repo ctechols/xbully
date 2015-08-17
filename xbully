@@ -61,6 +61,30 @@ class Monitor
 		@x + @width;
 	end
 
+	def right_of?(window)
+		(window.right < self.right) &&
+		(window.top <= self.bottom) &&
+		(self.top <= window.bottom)
+	end
+
+	def left_of?(window)
+		(window.left > self.left) &&
+		(window.top <= self.bottom) &&
+		(self.top <= window.bottom)
+	end
+
+	def above?(window)
+		(window.top > self.top) &&
+		(window.left <= self.right) &&
+		(self.left <= window.right)
+	end
+
+	def below?(window)
+		(window.bottom < self.bottom) &&
+		(window.left <= self.right) &&
+		(self.left <= window.right)
+	end
+
 	# returns true if the line along the given 'x'
 	# intersects the monitor's work area.
 	def contains_x?(x)
