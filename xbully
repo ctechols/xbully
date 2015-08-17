@@ -294,20 +294,33 @@ class Desktop
 	   	}.collect { |w| w.left }
 
 		candidate_edges.concat @monitors.select { |m|
-			m.contains_x?(window.right + 1)
+			m.right_of?(window)
 		}.collect { |m| m.right }
 
-		candidate_edges.min() || window.right;
+		return candidate_edges
 	end
 
 	def pack_right(window)
-		new_right = next_edge_right(window, :no);
-		window.place(:x => new_right - window.width);
+		candidate_placements = next_edge_right(window, :no).map { |edge|
+			{ :x => edge - window.width }
+		}
+		candidate_placements.find { |p| window.place(p) }
 	end
 
 	def grow_right(window)
-		new_right = next_edge_right(window, :no)
-		window.place( :width => new_right - window.left )
+		candidate_placements = next_edge_right(window, :no).map { |edge|
+			{ :width => edge - window.left }
+		}
+		# Due to window hints, windows don't always get placed
+		# exactly where you request.  If this situation occurs, calls to 
+		# grow_right will not move the window (because the window won't get 
+		# placed perfectly against the border of another window).
+		#
+		# The correct solution is to read the WM_SIZE_HINTS and take those hints 
+		# into account when trying to place the window.  ruby-xlib doesn't have 
+		# those functions yet, and I don't know enough about ruby's FFI to add 
+		# them.
+		candidate_placements.find { |p| window.place(p) }
 	end
 
 	private def next_edge_left(window, include_overlap)
@@ -316,15 +329,17 @@ class Desktop
 		}.collect { |w| w.right}
 
 		candidates_edges.concat @monitors.select { |m|
-			m.contains_x?(window.left - 1)
+			m.left_of?(window)
 		}.collect { |m| m.left }
 
-		candidates_edges.max || window.left
+		candidates_edges.sort().reverse()
 	end
 
 	def pack_left(window)
-		new_left = next_edge_left(window, :no);
-		window.place(:x => new_left);
+		candidate_placements = next_edge_left(window, :no).map { |e|
+			{:x => e }
+		}
+		candidate_placements.find { |p| window.place(p) }
 	end
 
 	private def next_edge_up(window, include_overlap)
@@ -333,15 +348,17 @@ class Desktop
 		}.collect { |w| w.bottom }
 
 		candidates_edges.concat @monitors.select { |m|
-			m.contains_y?(window.top - 1)
+			m.above?(window)
 		}.collect { |m| m.top }
 
-		candidates_edges.max || window.top
+		return candidates_edges
 	end
 
 	def pack_up(window)
-		new_top = next_edge_up(window, :no)
-		window.place( :y => new_top )
+		candidate_placements = next_edge_up(window, :no).map { |edge|
+			{ :y => edge }
+		}
+		candidate_placements.find { |p| window.place(p) }
 	end
 
 	private def next_edge_down(window, include_overlap)
@@ -350,15 +367,17 @@ class Desktop
 		}.collect { |w| w.top }
 
 		candidates_edges.concat @monitors.select { |m|
-			m.contains_y?(window.bottom + 1)
+			m.below?(window)
 		}.collect { |m| m.bottom }
 
-		candidates_edges.min || window.bottom
+		return candidates_edges
 	end
 
 	def pack_down(window)
-		new_bottom = next_edge_down(window, :no)
-		window.place( :y => new_bottom - window.height)
+		candidate_placements = next_edge_down(window, :no).map { |edge|
+			{ :y => edge - window.height }
+		}
+		candidate_placements.find { |p| window.place(p) }
 	end
 
 	private_class_method :get_screen_info, :get_active_desktop, :get_visible_windows
