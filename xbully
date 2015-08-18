@@ -450,5 +450,5 @@ class CommandInterpreter
 end
 
 desktop = Desktop.build();
-interpreter = CommandInterpreter.new(Desktop.build());
+interpreter = CommandInterpreter.new(desktop);
 interpreter.run_command(ARGF.argv);
