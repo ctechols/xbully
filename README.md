@@ -62,6 +62,17 @@ immediately adjacent to the nearest window or monitor edge:
 * pack_up
 * pack_down
 
+## `grow_<direction>`
+
+These commands will increase the size of the window until it is
+immediately adjacent to the nearest window or monitor edge in the named 
+direction:
+
+* grow_left
+* grow_right
+* grow_up
+* grow_down
+
 # Known Issues
 
 marco (The MATE window manager) prevents windows from being placed across the 
