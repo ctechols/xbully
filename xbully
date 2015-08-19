@@ -300,11 +300,40 @@ class Desktop
 		return candidate_edges
 	end
 
-	def pack_east(window)
-		candidate_placements = next_edge_east(window, :no).map { |edge|
-			{ :x => edge - window.width }
-		}
-		candidate_placements.find { |p| window.place(p) }
+	private def next_edge_west(window, include_overlap)
+		candidates_edges = @visible_windows.select {  |w|
+			w.left_of?(window) && overlap_filter(w, window, include_overlap)
+		}.collect { |w| w.right}
+
+		candidates_edges.concat @monitors.select { |m|
+			m.left_of?(window)
+		}.collect { |m| m.left }
+
+		candidates_edges.sort().reverse()
+	end
+
+	private def next_edge_north(window, include_overlap)
+		candidates_edges = @visible_windows.select { |w|
+			w.above?(window) && overlap_filter(w, window, include_overlap)
+		}.collect { |w| w.bottom }
+
+		candidates_edges.concat @monitors.select { |m|
+			m.above?(window)
+		}.collect { |m| m.top }
+
+		return candidates_edges.sort().reverse()
+	end
+
+	private def next_edge_south(window, include_overlap)
+		candidates_edges = @visible_windows.select { |w|
+			w.below?(window) && overlap_filter(w, window, include_overlap)
+		}.collect { |w| w.top }
+
+		candidates_edges.concat @monitors.select { |m|
+			m.below?(window)
+		}.collect { |m| m.bottom }
+
+		return candidates_edges
 	end
 
 	def grow_east(window)
@@ -344,16 +373,11 @@ class Desktop
 		candidate_placements.find { |p| window.place(p) }
 	end
 
-	private def next_edge_west(window, include_overlap)
-		candidates_edges = @visible_windows.select {  |w|
-			w.left_of?(window) && overlap_filter(w, window, include_overlap)
-		}.collect { |w| w.right}
-
-		candidates_edges.concat @monitors.select { |m|
-			m.left_of?(window)
-		}.collect { |m| m.left }
-
-		candidates_edges.sort().reverse()
+	def pack_east(window)
+		candidate_placements = next_edge_east(window, :no).map { |edge|
+			{ :x => edge - window.width }
+		}
+		candidate_placements.find { |p| window.place(p) }
 	end
 
 	def pack_west(window)
@@ -363,35 +387,11 @@ class Desktop
 		candidate_placements.find { |p| window.place(p) }
 	end
 
-	private def next_edge_north(window, include_overlap)
-		candidates_edges = @visible_windows.select { |w|
-			w.above?(window) && overlap_filter(w, window, include_overlap)
-		}.collect { |w| w.bottom }
-
-		candidates_edges.concat @monitors.select { |m|
-			m.above?(window)
-		}.collect { |m| m.top }
-
-		return candidates_edges.sort().reverse()
-	end
-
 	def pack_north(window)
 		candidate_placements = next_edge_north(window, :no).map { |edge|
 			{ :y => edge }
 		}
 		candidate_placements.find { |p| window.place(p) }
-	end
-
-	private def next_edge_south(window, include_overlap)
-		candidates_edges = @visible_windows.select { |w|
-			w.below?(window) && overlap_filter(w, window, include_overlap)
-		}.collect { |w| w.top }
-
-		candidates_edges.concat @monitors.select { |m|
-			m.below?(window)
-		}.collect { |m| m.bottom }
-
-		return candidates_edges
 	end
 
 	def pack_south(window)
