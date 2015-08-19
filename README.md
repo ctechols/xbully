@@ -57,10 +57,10 @@ Run xbully commands using the following syntax:
 These commands will move a window in the named direction until they are 
 immediately adjacent to the nearest window or monitor edge:
 
-* pack_left
-* pack_right
-* pack_up
-* pack_down
+* pack_north
+* pack_south
+* pack_east
+* pack_west
 
 ## `grow_<direction>`
 
@@ -68,10 +68,10 @@ These commands will increase the size of the window until it is
 immediately adjacent to the nearest window or monitor edge in the named 
 direction:
 
-* grow_left
-* grow_right
-* grow_up
-* grow_down
+* grow_north
+* grow_south
+* grow_east
+* grow_west
 
 # Known Issues
 

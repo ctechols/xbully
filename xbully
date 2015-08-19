@@ -288,7 +288,7 @@ class Desktop
 		end
 	end
 
-	private def next_edge_right(window, include_overlap)
+	private def next_edge_east(window, include_overlap)
 		candidate_edges = @visible_windows.select { |w| 
 			w.right_of?(window) && overlap_filter(w, window, include_overlap)
 	   	}.collect { |w| w.left }
@@ -300,20 +300,20 @@ class Desktop
 		return candidate_edges
 	end
 
-	def pack_right(window)
-		candidate_placements = next_edge_right(window, :no).map { |edge|
+	def pack_east(window)
+		candidate_placements = next_edge_east(window, :no).map { |edge|
 			{ :x => edge - window.width }
 		}
 		candidate_placements.find { |p| window.place(p) }
 	end
 
-	def grow_right(window)
-		candidate_placements = next_edge_right(window, :no).map { |edge|
+	def grow_east(window)
+		candidate_placements = next_edge_east(window, :no).map { |edge|
 			{ :width => edge - window.left }
 		}
 		# Due to window hints, windows don't always get placed
 		# exactly where you request.  If this situation occurs, calls to 
-		# grow_right will not move the window (because the window won't get 
+		# grow_east will not move the window (because the window won't get 
 		# placed perfectly against the border of another window).
 		#
 		# The correct solution is to read the WM_SIZE_HINTS and take those hints 
@@ -323,28 +323,28 @@ class Desktop
 		candidate_placements.find { |p| window.place(p) }
 	end
 
-	def grow_left(window)
-		candidate_placements = next_edge_left(window, :no).map { |edge|
+	def grow_west(window)
+		candidate_placements = next_edge_west(window, :no).map { |edge|
 			{ :x => edge, :width => window.right - edge}
 		}
 		candidate_placements.find { |p| window.place(p) }
 	end
 
-	def grow_up(window)
-		candidate_placements = next_edge_up(window, :no).map { |edge|
+	def grow_north(window)
+		candidate_placements = next_edge_north(window, :no).map { |edge|
 			{ :y => edge, :height => window.bottom - edge }
 		}
 		candidate_placements.find { |p| window.place(p) }
 	end
 
-	def grow_down(window)
-		candidate_placements = next_edge_down(window, :no).map { |edge|
+	def grow_south(window)
+		candidate_placements = next_edge_south(window, :no).map { |edge|
 			{ :height => edge - window.top }
 		}
 		candidate_placements.find { |p| window.place(p) }
 	end
 
-	private def next_edge_left(window, include_overlap)
+	private def next_edge_west(window, include_overlap)
 		candidates_edges = @visible_windows.select {  |w|
 			w.left_of?(window) && overlap_filter(w, window, include_overlap)
 		}.collect { |w| w.right}
@@ -356,14 +356,14 @@ class Desktop
 		candidates_edges.sort().reverse()
 	end
 
-	def pack_left(window)
-		candidate_placements = next_edge_left(window, :no).map { |e|
+	def pack_west(window)
+		candidate_placements = next_edge_west(window, :no).map { |e|
 			{:x => e }
 		}
 		candidate_placements.find { |p| window.place(p) }
 	end
 
-	private def next_edge_up(window, include_overlap)
+	private def next_edge_north(window, include_overlap)
 		candidates_edges = @visible_windows.select { |w|
 			w.above?(window) && overlap_filter(w, window, include_overlap)
 		}.collect { |w| w.bottom }
@@ -375,14 +375,14 @@ class Desktop
 		return candidates_edges.sort().reverse()
 	end
 
-	def pack_up(window)
-		candidate_placements = next_edge_up(window, :no).map { |edge|
+	def pack_north(window)
+		candidate_placements = next_edge_north(window, :no).map { |edge|
 			{ :y => edge }
 		}
 		candidate_placements.find { |p| window.place(p) }
 	end
 
-	private def next_edge_down(window, include_overlap)
+	private def next_edge_south(window, include_overlap)
 		candidates_edges = @visible_windows.select { |w|
 			w.below?(window) && overlap_filter(w, window, include_overlap)
 		}.collect { |w| w.top }
@@ -394,8 +394,8 @@ class Desktop
 		return candidates_edges
 	end
 
-	def pack_down(window)
-		candidate_placements = next_edge_down(window, :no).map { |edge|
+	def pack_south(window)
+		candidate_placements = next_edge_south(window, :no).map { |edge|
 			{ :y => edge - window.height }
 		}
 		candidate_placements.find { |p| window.place(p) }
@@ -410,36 +410,36 @@ class CommandInterpreter
 		@desktop = desktop;
 	end
 
-	def grow_right(args)
-		@desktop.grow_right(@desktop.active_window);
+	def grow_east(args)
+		@desktop.grow_east(@desktop.active_window);
 	end
 
-	def grow_left(args)
-		@desktop.grow_left(@desktop.active_window)
+	def grow_west(args)
+		@desktop.grow_west(@desktop.active_window)
 	end
 
-	def grow_up(args)
-		@desktop.grow_up(@desktop.active_window)
+	def grow_north(args)
+		@desktop.grow_north(@desktop.active_window)
 	end
 
-	def grow_down(args)
-		@desktop.grow_down(@desktop.active_window)
+	def grow_south(args)
+		@desktop.grow_south(@desktop.active_window)
 	end
 
-	def pack_right(args)
-		@desktop.pack_right(@desktop.active_window);
+	def pack_east(args)
+		@desktop.pack_east(@desktop.active_window);
 	end
 
-	def pack_left(args)
-		@desktop.pack_left(@desktop.active_window);
+	def pack_west(args)
+		@desktop.pack_west(@desktop.active_window);
 	end
 
-	def pack_up(args)
-		@desktop.pack_up(@desktop.active_window);
+	def pack_north(args)
+		@desktop.pack_north(@desktop.active_window);
 	end
 
-	def pack_down(args)
-		@desktop.pack_down(@desktop.active_window)
+	def pack_south(args)
+		@desktop.pack_south(@desktop.active_window)
 	end
 
 	def run_command(args)
