@@ -62,6 +62,16 @@ immediately adjacent to the nearest window or monitor edge:
 * pack_east
 * pack_west
 
+## `yank_<direction>`
+
+These commands will move a window in the named direction until it overlaps
+with one less window.
+
+* yank_north
+* yank_south
+* yank_east
+* yank_west
+
 ## `grow_<direction>`
 
 These commands will increase the size of the window until it is

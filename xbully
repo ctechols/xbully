@@ -401,6 +401,34 @@ class Desktop
 		candidate_placements.find { |p| window.place(p) }
 	end
 
+	def yank_east(window)
+		candidate_placements = @visible_windows.select { |w|
+			(w != window) &&  window.overlap?(w)
+	   	}.collect { |w| w.right }.sort().map { |edge| {:x => edge} }
+		candidate_placements.find { |p| window.place(p) }
+	end
+
+	def yank_west(window)
+		candidate_placements = @visible_windows.select { |w|
+			(w != window) && window.overlap?(w)
+		}.collect { |w| w.left }.sort().reverse().map { |edge| {:x => edge - window.width } }
+		candidate_placements.find { |p| window.place(p) }
+	end
+
+	def yank_north(window)
+		candidate_placements = @visible_windows.select { |w|
+			(w != window) && window.overlap?(w)
+		}.collect { |w| w.top }.sort().reverse().map { |edge| {:y => edge - window.height } }
+		candidate_placements.find { |p| window.place(p) }
+	end
+
+	def yank_south(window)
+		candidate_placements = @visible_windows.select { |w|
+			(w != window) && window.overlap?(w)
+		}.collect { |w| w.bottom }.sort().map { |edge| {:y => edge } }
+		candidate_placements.find { |p| window.place(p) }
+	end
+
 	private_class_method :get_screen_info, :get_active_desktop, :get_visible_windows
 	attr_reader :screen, :monitors, :visible_windows
 end
@@ -440,6 +468,22 @@ class CommandInterpreter
 
 	def pack_south(args)
 		@desktop.pack_south(@desktop.active_window)
+	end
+
+	def yank_east(args)
+		@desktop.yank_east(@desktop.active_window)
+	end
+
+	def yank_west(args)
+		@desktop.yank_west(@desktop.active_window)
+	end
+
+	def yank_north(args)
+		@desktop.yank_north(@desktop.active_window)
+	end
+
+	def yank_south(args)
+		@desktop.yank_south(@desktop.active_window)
 	end
 
 	def run_command(args)
