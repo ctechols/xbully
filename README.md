@@ -54,7 +54,7 @@ Run xbully commands using the following syntax:
 
 ## `pack_<direction>`
 
-These commands will move a window in the named direction until they are 
+These commands will move a window in the named direction until it is
 immediately adjacent to the nearest window or monitor edge:
 
 * pack_north
